@@ -1,5 +1,5 @@
-#ifndef _LEVELSUBDOMAIN_H
-#define _LEVELSUBDOMAIN_H
+#ifndef _LEVELSUBDOMAINCONTAINER_H
+#define _LEVELSUBDOMAINCONTAINER_H
 
 
 
@@ -10,6 +10,7 @@ struct LevelSubdomainContainer{
 	typedef LevelSubdomainContainer<KeyT, MappedT, SubdomainLabelT> SelfT;
 
 	// these map an integer LEVEL (starting from 0) to another map
+	// that maps a SUBDOMAIN to another map
 	// that maps a KEY to a NODE
 	std::map<std::size_t, std::map<SubdomainLabelT, std::unordered_map<KeyT, MappedT>>> 		mKeyMaps; 		
 
