@@ -29,7 +29,7 @@ int main(int argc, char * argv[]){
 	// }
 	// std::cout << "numelements: " << ct << std::endl;
 
-	typedef std::map<std::size_t, double>		inner_map;
+	typedef std::map<std::size_t, double>	inner_map;
 	typedef treefidi::NestedContainer<std::size_t, inner_map>		mapmap;
 	typedef treefidi::NestedContainer<std::size_t, mapmap> 		mapmapmap;
 	mapmap m;

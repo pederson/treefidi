@@ -12,12 +12,12 @@
 namespace treefidi{
 
 
-// typedef std::mapdefaultmap;
-template<class K, class V>
+// typedef std::map as defaultmap;
+template <class K, class V>
 struct DefMapTypedef{
 	typedef std::map<K, V> type;
 };
-template<class K, class V>
+template <class K, class V>
 using DefMap = typename DefMapTypedef<K,V>::type;
 
 template <class V>
@@ -28,11 +28,11 @@ template <class V>
 using IntMap = typename IntMapTypedef<V>::type;
 
 
-template<class V>
+template <class V>
 struct DefVecTypedef{
 	typedef std::vector<V> type;
 };
-template<class V>
+template <class V>
 using DefVec = typename DefVecTypedef<V>::type;
 
 
@@ -45,7 +45,7 @@ using DefVec = typename DefVecTypedef<V>::type;
 
 
 
-// use some magic to get mapped containers value 
+// use some SFINAE magic to get mapped containers value 
 template <typename T>
 struct tovoid {
   typedef void type;
@@ -116,16 +116,19 @@ inline typename std::add_lvalue_reference<typename value_type<Container, Iterato
 // *						- ::iterator, begin(), end()
 // *			optional:	- iterator at(std::size_t lvl)
 
-template <class KeyT, 
-		  class SubcontainerT,
+template <class Key, 
+		  class Subcontainer,
 		  template <class K, class V> class ContainerT = DefMap >
-struct NestedContainer : public ContainerT<KeyT, SubcontainerT>{
+struct NestedContainer : public ContainerT<Key, Subcontainer>{
 public:
-	typedef NestedContainer<KeyT, SubcontainerT, ContainerT>	SelfT;
+	// class typedefs
+	typedef Key 													KeyT;
+	typedef Subcontainer 											SubcontainerT;
+	// typedef Container 												ContainerT;
+	typedef NestedContainer<KeyT, SubcontainerT, ContainerT>		SelfT;
 	typedef ContainerT<KeyT, SubcontainerT> 						base_container;
 	typedef typename ContainerT<KeyT, SubcontainerT>::iterator 		base_iterator;
-
-
+	
 private:
 	SubcontainerT    mEndSubcont;
 
@@ -136,7 +139,7 @@ public:
 	
 
 
-
+	// basic iterator over the external container
 	class iterator{
 	public:
 		typedef iterator 								self_type;

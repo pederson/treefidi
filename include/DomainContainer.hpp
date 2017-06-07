@@ -18,6 +18,9 @@ template <class SubdomainLabelT, class SubdomainContainer>
 using DomainContainer = typename DomainContainerTypedef<SubdomainLabelT, SubdomainContainer>::type;
 
 
+// define domain iterator
+template <class DomainContainerT>
+using domain_iterator = typename DomainContainerT::SubcontainerT::iterator;
 
 } // end namespace treefidi
 
