@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <type_traits>
+#include <algorithm>
 
 
 namespace treefidi{
@@ -56,7 +57,7 @@ struct value_type {
   typedef typename T::value_type type;
   static typename std::add_lvalue_reference<type>::type get(I & t) {
     return *t;
-  }
+  };
 };
 
 // if is a map or unordered map.... has a mapped_type
@@ -65,7 +66,7 @@ struct value_type<T, I, typename tovoid<typename T::mapped_type>::type> {
   typedef typename T::mapped_type type;
   static typename std::add_lvalue_reference<type>::type get(I & t) {
     return t->second;
-  }
+  };
 };
 
 
@@ -100,16 +101,22 @@ template <class KeyT,
 		  class SubcontainerT,
 		  template <class K, class V> class ContainerT = DefMap >
 struct NestedMappedContainer : public ContainerT<KeyT, SubcontainerT>{
+public:
 	typedef NestedMappedContainer<KeyT, SubcontainerT, ContainerT>	SelfT;
-	// typedef typename ContainerT<KeyT, SubcontainerT>::iterator 		iterator;
-	typedef ContainerT<KeyT, SubcontainerT> 					base_container;
+	typedef ContainerT<KeyT, SubcontainerT> 						base_container;
 	typedef typename ContainerT<KeyT, SubcontainerT>::iterator 		base_iterator;
 
 
-	typedef typename base_container::mapped_type 		mapped_type;
+private:
+	SubcontainerT    mEndSubcont;
+
+public:
+
+	// typedef typename base_container::mapped_type 		mapped_type;
 
 	// SubcontainerT is required to have the followsing:
 	// * 						- ::iterator, begin(), end()
+	// *						- a trivial constructor
 	// NestedMappedContainer inherits from its ContainerT :
 	// *						- NestedMappedContainer & operator[](std::size_t level)
 	// *						- void insert(std::size_t lvl, NestedMappedContainer lc)
@@ -121,7 +128,7 @@ struct NestedMappedContainer : public ContainerT<KeyT, SubcontainerT>{
 	// NestedMappedContainer() : ContainerT<KeyT, SubcontainerT>() {};
 
 	template <class SubiteratorT> class nested_iterator;
-
+	template <class SubiteratorT> friend class nested_iterator;
 	
 
 
@@ -144,21 +151,21 @@ struct NestedMappedContainer : public ContainerT<KeyT, SubcontainerT>{
 
 		// construction
 		iterator(NestedMappedContainer & t, const base_iterator & bit)
-		: cont(t)
+		: cont(&t)
 		, it(bit){};
 
 
+		// copy construction
 		iterator(const iterator & itr): cont(itr.cont), it(itr.it) {};
 
-
-		iterator operator=(const iterator & itr){
+		// copy assignment
+		iterator & operator=(const iterator & itr){
 			iterator i(itr);
-			return i;
+			// std::swap(i,*this);
+			cont = i.cont;
+			it = i.it;
+			return *this;
 		}
-		// iterator(NestedMappedContainer & t, typename ContainerT::iterator iter)
-		// : cont(t)
-		// , sit(t.mKeyMaps[lvl].find(subd))
-		// , it(iter) {};
 
 		// dereferencing
 		reference operator*(){ return *it;};
@@ -187,7 +194,7 @@ struct NestedMappedContainer : public ContainerT<KeyT, SubcontainerT>{
 
 	private:
 		base_iterator 					it;
-		NestedMappedContainer & 		cont;
+		NestedMappedContainer * 		cont;
 	};
 
 
@@ -195,23 +202,22 @@ struct NestedMappedContainer : public ContainerT<KeyT, SubcontainerT>{
 	iterator begin(){return iterator(*this, ContainerT<KeyT, SubcontainerT>::begin());};
 	iterator end(){return iterator(*this, ContainerT<KeyT, SubcontainerT>::end());};
 
-	// template <class IteratorT = typename ContainerT<KeyT, SubcontainerT>::iterator>
-	// IteratorT begin(){return ContainerT<KeyT, SubcontainerT>::begin();};
-
-	// template <class SubiteratorT> begin<nested_iterator<SubiteratorT>>(){return nested_iterator<SubiteratorT>(*this);};
-	
 
 
 
-	// template <class SubiteratorT = typename SubcontainerT::iterator>
-	// nested_iterator<SubiteratorT> begin(){return nested_iterator<SubiteratorT>(*this);};
 
 
-	// template <class IteratorT>
-	// IteratorT begin(){};
 
 
-	// nested_iterator begin(){return nested_iterator(*this);};
+
+
+
+
+
+
+
+
+
 
 
 
@@ -228,90 +234,81 @@ struct NestedMappedContainer : public ContainerT<KeyT, SubcontainerT>{
 	    typedef typename SubiteratorT::pointer			pointer;
 	    typedef std::forward_iterator_tag 				iterator_category;
 
-
-	    // friend class SubiteratorT;
-
-		// construction
-		// nested_iterator(NestedMappedContainer & t)
-		// : cont(t)
-		// , subit((t.mKeyMaps.begin())->second.begin())
-		// , it(((t.mKeyMaps.begin())->second.begin())->second.begin()){std::cout << "reg const" << std::endl;};
-
-		// nested_iterator(NestedMappedContainer & t, typename ContainerT::nested_iterator iter)
-		// : cont(t)
-		// , sit(t.mKeyMaps[lvl].find(subd))
-		// , it(iter) {};
-
 		// nested iterator has explicit conversion from iterator to nested_iterator
 		nested_iterator(const iterator & bit)
 		: cont(bit.cont)
+		, subit(bit.cont->mEndSubcont.begin())
 		, it(bit) {
-			std::cout << "copy const" << std::endl; 
-			if (it != cont.end()){
-				subit = getIteratorValue(cont, it).begin();
-				std::cout << "setting subit" << std::endl;
+			if (it != cont->end())
+			{
+				subit = getIteratorValue(*cont, it).begin();
 			}
 			else{
-				std::cout << "nulling subit" << std::endl;
-				subit = *subitend;
+				subit = cont->mEndSubcont.end();
 			}
 		};
+
+
+		// copy construction
+		nested_iterator(const nested_iterator & bit)
+		: cont(bit.cont)
+		, subit(bit.subit)
+		, it(bit.it) {};
+
+
+		// copy assignment
+		nested_iterator & operator=(const nested_iterator & bit)
+		{
+			nested_iterator nit(bit);
+			// std::swap(nit, *this);
+			cont = nit.cont;
+			subit = nit.subit;
+			it = nit.it;
+			return *this;
+		};
+
 		// dereferencing
 		reference operator*(){ return *subit;};
 
 		// preincrement 
 		self_type operator++(){
 			subit++;
-			std::cout << "subit++" << std::endl;
-			while (it != cont.end()){
-				if (subit != getIteratorValue(cont, it).end()){
-					std::cout << subit->first << "->" << subit->second << std::endl;
-					std::cout << "return *this" << std::endl;
+			while (it != cont->end()){
+				if (subit != getIteratorValue(*cont, it).end()){
 					return *this;
 				}
 
-				// reached end of subiterator
+				// reached end of subcontainer, iterate to next one
 				it++;
-				std::cout << "it++" << std::endl;
 
-				if (it == cont.end()) break;
-				subit = getIteratorValue(cont, it).begin();	
+				if (it == cont->end()) break;
+				subit = getIteratorValue(*cont, it).begin();	
 			}
 
-			std::cout << "returning" << std::endl;
-
 			// have reached the end of all the cells
-			it = cont.end();
-			subit = *subitend;
+			it = cont->end();
+			subit = cont->mEndSubcont.end();
 			return *this;
 		}
 
 		// postincrement 
 		self_type operator++(int blah){
 			subit++;
-			std::cout << "subit++" << std::endl;
-			while (it != cont.end()){
-				if (subit != getIteratorValue(cont, it).end()){
-					std::cout << subit->first << "->" << subit->second << std::endl;
-					std::cout << "return *this" << std::endl;
+			while (it != cont->end()){
+				if (subit != getIteratorValue(*cont, it).end()){
 					return *this;
 				}
 
-				// reached end of subiterator
+				// reached end of subcontainer, iterate to next one
 				it++;
-				std::cout << "it++" << std::endl;
 
-				if (it == cont.end()) break;
-				subit = getIteratorValue(cont, it).begin();	
+				if (it == cont->end()) break;
+				subit = getIteratorValue(*cont, it).begin();	
 			}
 
-			std::cout << "returninggg" << std::endl;
-
 			// have reached the end of all the cells
-			it = cont.end();
-			subit = *subitend;
-			// auto p = it;
-			// subit = getIteratorValue(--p).end();
+			it = cont->end();
+			subit = cont->mEndSubcont.end();
 			return *this;
 		}
 
@@ -327,54 +324,10 @@ struct NestedMappedContainer : public ContainerT<KeyT, SubcontainerT>{
 	private:
 		SubiteratorT 						subit;
 		iterator 							it;
-		NestedMappedContainer & 			cont;
-
-
-
-		const SubiteratorT * 				subitend=nullptr;
-		// template <typename Container>
-		// typename value_type<Container>::type getIteratorValue(const typename Container::iterator & it){
-		// 	return value_type<Container>::get(it);
-		// }
-
-		// SubcontainerT & getSubcontainer(base_iterator & it){
-		// 	if ()
-		// }
+		NestedMappedContainer * 			cont;
 	};
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

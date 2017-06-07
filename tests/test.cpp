@@ -7,6 +7,7 @@
 // clang++-3.8 -std=c++14 -O2 test.cpp -o test
 
 
+
 int main(int argc, char * argv[]){
 
 	std::cout << "hello" << std::endl;
@@ -31,21 +32,34 @@ int main(int argc, char * argv[]){
 	typedef treefidi::NestedMappedContainer<std::size_t, mapmap> 		mapmapmap;
 	mapmap m;
 	mapmapmap mm;
-	m[0][0]=1;
-	m[0][0]=2;
+	
 	m[1][0]=3;
-	m[2][0]=4;
 	m[1][1]=5;
+	m[2][0]=4;
+	m[3][0]=1;
+	m[3][1]=2;
+
+
+
+	mm[1][0][0]=9;
+	mm[1][0][1]=4;
+	mm[1][1][0]=8;
+	mm[1][1][1]=3;
+
+	mm[2][0][0]=7;
+	mm[2][0][1]=2;
+
+	mm[3][0][0]=6;
+	mm[3][0][1]=1;
+	mm[3][1][0]=5;
+	mm[3][1][1]=0;
+
 
 	int ct=0;
 	for (mapmap::iterator it=m.begin(); it!=m.end(); it++){
 		ct++;
 	}
-	std::cout << "count: " << ct << std::endl;
-
-
-	// throw -1;
-
+	std::cout << "level count: " << ct << std::endl;
 
 
 	typedef typename inner_map::iterator  				imit;
@@ -55,10 +69,20 @@ int main(int argc, char * argv[]){
 	
 	ct=0;
 	for (mnit it=m.begin(); it!=m.end(); it++){
+		std::cout << it->second << std::endl;
 		ct++;
-		if (ct > 8) throw -1;
 	}
-	std::cout << "count: " << ct << std::endl;
+	std::cout << "total count: " << ct << std::endl;
+
+
+
+
+	ct=0;
+	for (wholeiterator it=mm.begin(); it!=mm.end(); it++){
+		std::cout << it->second << std::endl;
+		ct++;
+	}
+	std::cout << "total count: " << ct << std::endl;
 
 	return 0;
 }
