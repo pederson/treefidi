@@ -1,4 +1,6 @@
 #include "../include/NestedContainer.hpp"
+#include "../include/MultilevelContainer.hpp"
+#include "../include/DomainContainer.hpp"
 
 #include <iostream>
 #include <vector>
@@ -28,8 +30,8 @@ int main(int argc, char * argv[]){
 	// std::cout << "numelements: " << ct << std::endl;
 
 	typedef std::map<std::size_t, double>		inner_map;
-	typedef treefidi::NestedMappedContainer<std::size_t, inner_map>		mapmap;
-	typedef treefidi::NestedMappedContainer<std::size_t, mapmap> 		mapmapmap;
+	typedef treefidi::NestedContainer<std::size_t, inner_map>		mapmap;
+	typedef treefidi::NestedContainer<std::size_t, mapmap> 		mapmapmap;
 	mapmap m;
 	mapmapmap mm;
 	

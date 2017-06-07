@@ -93,16 +93,35 @@ inline typename std::add_lvalue_reference<typename value_type<Container, Iterato
 
 
 
+// NestedContainer is a container that contains another container.
+/* You could possible contain another nested container... container-ception
+/*
+/* Of course you can also make containers containing containers in the
+/* usual stl container types. What makes this container different is that
+/* it implements not just ::iterator, but also ::nested_iterator, which
+/* allows you to iterate over all subcontainer elements in each subcontainer
+/* with a single iterator. For example, you might have a map<int, map<int, double>>. 
+/* You could iterate over all the doubles by using 
+/* a ::nested_iterator<map<int,double>::iterator>
+/*
+/***********************************************************/
 
-
-
+// SubcontainerT is required to have the followsing:
+// * 						- ::iterator, begin(), end()
+// *						- a trivial constructor
+// NestedContainer inherits from its ContainerT :
+// *						- NestedContainer & operator[](std::size_t level)
+// *						- void insert(std::size_t lvl, NestedContainer lc)
+// *						- void erase(std::size_t lvl)
+// *						- ::iterator, begin(), end()
+// *			optional:	- iterator at(std::size_t lvl)
 
 template <class KeyT, 
 		  class SubcontainerT,
 		  template <class K, class V> class ContainerT = DefMap >
-struct NestedMappedContainer : public ContainerT<KeyT, SubcontainerT>{
+struct NestedContainer : public ContainerT<KeyT, SubcontainerT>{
 public:
-	typedef NestedMappedContainer<KeyT, SubcontainerT, ContainerT>	SelfT;
+	typedef NestedContainer<KeyT, SubcontainerT, ContainerT>	SelfT;
 	typedef ContainerT<KeyT, SubcontainerT> 						base_container;
 	typedef typename ContainerT<KeyT, SubcontainerT>::iterator 		base_iterator;
 
@@ -112,45 +131,26 @@ private:
 
 public:
 
-	// typedef typename base_container::mapped_type 		mapped_type;
-
-	// SubcontainerT is required to have the followsing:
-	// * 						- ::iterator, begin(), end()
-	// *						- a trivial constructor
-	// NestedMappedContainer inherits from its ContainerT :
-	// *						- NestedMappedContainer & operator[](std::size_t level)
-	// *						- void insert(std::size_t lvl, NestedMappedContainer lc)
-	// *						- void erase(std::size_t lvl)
-	// *						- ::iterator, begin(), end()
-	// *			optional:	- iterator at(std::size_t lvl)
-
-
-	// NestedMappedContainer() : ContainerT<KeyT, SubcontainerT>() {};
-
 	template <class SubiteratorT> class nested_iterator;
 	template <class SubiteratorT> friend class nested_iterator;
 	
 
 
 
-
-
-
-
 	class iterator{
 	public:
-		typedef iterator 						self_type;
-		typedef std::ptrdiff_t 					difference_type;
+		typedef iterator 								self_type;
+		typedef std::ptrdiff_t 							difference_type;
 	    typedef typename base_iterator::value_type		value_type;
 	    typedef typename base_iterator::reference		reference;
 	    typedef typename base_iterator::pointer			pointer;
-	    typedef std::forward_iterator_tag 		iterator_category;
+	    typedef std::forward_iterator_tag 				iterator_category;
 
 
 	    template <class SubiteratorT> friend class nested_iterator;
 
 		// construction
-		iterator(NestedMappedContainer & t, const base_iterator & bit)
+		iterator(NestedContainer & t, const base_iterator & bit)
 		: cont(&t)
 		, it(bit){};
 
@@ -194,23 +194,13 @@ public:
 
 	private:
 		base_iterator 					it;
-		NestedMappedContainer * 		cont;
+		NestedContainer * 		cont;
 	};
 
 
 
 	iterator begin(){return iterator(*this, ContainerT<KeyT, SubcontainerT>::begin());};
 	iterator end(){return iterator(*this, ContainerT<KeyT, SubcontainerT>::end());};
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -324,7 +314,7 @@ public:
 	private:
 		SubiteratorT 						subit;
 		iterator 							it;
-		NestedMappedContainer * 			cont;
+		NestedContainer * 			cont;
 	};
 
 };
