@@ -73,7 +73,7 @@ struct value_type<T, I, typename tovoid<typename T::mapped_type>::type> {
 template <typename Container, typename Iterator>
 inline typename std::add_lvalue_reference<typename value_type<Container, Iterator>::type>::type getIteratorValue(const Container & c, Iterator & it){
 	return value_type<Container, Iterator>::get(it);
-}
+};
 
 
 
@@ -94,17 +94,17 @@ inline typename std::add_lvalue_reference<typename value_type<Container, Iterato
 
 
 // NestedContainer is a container that contains another container.
-/* You could possible contain another nested container... container-ception
-/*
-/* Of course you can also make containers containing containers in the
-/* usual stl container types. What makes this container different is that
-/* it implements not just ::iterator, but also ::nested_iterator, which
-/* allows you to iterate over all subcontainer elements in each subcontainer
-/* with a single iterator. For example, you might have a map<int, map<int, double>>. 
-/* You could iterate over all the doubles by using 
-/* a ::nested_iterator<map<int,double>::iterator>
-/*
-/***********************************************************/
+//* You could possible contain another nested container... container-ception
+//*
+//* Of course you can also make containers containing containers in the
+//* usual stl container types. What makes this container different is that
+//* it implements not just ::iterator, but also ::nested_iterator, which
+//* allows you to iterate over all subcontainer elements in each subcontainer
+//* with a single iterator. For example, you might have a map<int, map<int, double>>. 
+//* You could iterate over all the doubles by using 
+//* a ::nested_iterator<map<int,double>::iterator>
+//*
+//***********************************************************/
 
 // SubcontainerT is required to have the followsing:
 // * 						- ::iterator, begin(), end()
@@ -193,7 +193,7 @@ public:
 
 
 	private:
-		base_iterator 					it;
+		base_iterator 			it;
 		NestedContainer * 		cont;
 	};
 
@@ -312,8 +312,8 @@ public:
 		bool operator==(const self_type & leaf) const {return subit == leaf.subit;};
 
 	private:
-		SubiteratorT 						subit;
-		iterator 							it;
+		SubiteratorT 				subit;
+		iterator 					it;
 		NestedContainer * 			cont;
 	};
 

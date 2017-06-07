@@ -18,7 +18,6 @@ template <class LevelContainer>
 using MultilevelContainer = typename MultilevelContainerTypedef<LevelContainer>::type;
 
 
-
 } // end namespace treefidi
 
 #endif
