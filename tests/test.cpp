@@ -1,12 +1,10 @@
-#include "../include/NestedContainer.hpp"
-#include "../include/MultilevelContainer.hpp"
-#include "../include/DomainContainer.hpp"
+#include <treefidi.h>
 
 #include <iostream>
 #include <vector>
 
 // compile with:
-// clang++-3.8 -std=c++14 -O2 test.cpp -o test
+// clang++-3.8 -std=c++14 -I../ -O2 test.cpp -o test
 
 
 
