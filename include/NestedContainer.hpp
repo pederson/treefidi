@@ -134,15 +134,15 @@ private:
 
 public:
 
-	template <class SubiteratorT> class nested_iterator;
-	template <class SubiteratorT> friend class nested_iterator;
+	class iterator;
+	friend class iterator;
 	
 
 
-	// basic iterator over the external container
-	class iterator{
+	// basic iterator over the outer container
+	class outer_iterator{
 	public:
-		typedef iterator 								self_type;
+		typedef outer_iterator 							self_type;
 		typedef std::ptrdiff_t 							difference_type;
 	    typedef typename base_iterator::value_type		value_type;
 	    typedef typename base_iterator::reference		reference;
@@ -150,20 +150,20 @@ public:
 	    typedef std::forward_iterator_tag 				iterator_category;
 
 
-	    template <class SubiteratorT> friend class nested_iterator;
+	    friend class iterator;
 
 		// construction
-		iterator(NestedContainer & t, const base_iterator & bit)
+		outer_iterator(NestedContainer & t, const base_iterator & bit)
 		: cont(&t)
 		, it(bit){};
 
 
 		// copy construction
-		iterator(const iterator & itr): cont(itr.cont), it(itr.it) {};
+		outer_iterator(const outer_iterator & itr): cont(itr.cont), it(itr.it) {};
 
 		// copy assignment
-		iterator & operator=(const iterator & itr){
-			iterator i(itr);
+		outer_iterator & operator=(const outer_iterator & itr){
+			outer_iterator i(itr);
 			// std::swap(i,*this);
 			cont = i.cont;
 			it = i.it;
@@ -201,38 +201,31 @@ public:
 	};
 
 
-
-	iterator begin(){return iterator(*this, ContainerT<KeyT, SubcontainerT>::begin());};
-	iterator end(){return iterator(*this, ContainerT<KeyT, SubcontainerT>::end());};
-
+	outer_iterator outer_begin(){return outer_iterator(*this, ContainerT<KeyT, SubcontainerT>::begin());};
+	outer_iterator outer_end(){return outer_iterator(*this, ContainerT<KeyT, SubcontainerT>::end());};
 
 
-
+	
 
 
 
 
 
-
-
-	template <class SubiteratorT> friend class nested_iterator;
-	// iterate over key/value pairs for all nested containers at once
-	template <class SubiteratorT = typename SubcontainerT::iterator>
-	class nested_iterator{
+	class iterator{
 	public:
-		typedef nested_iterator<SubiteratorT> 			self_type;
+		typedef iterator 								self_type;
 		typedef std::ptrdiff_t 							difference_type;
-	    typedef typename SubiteratorT::value_type		value_type;
-	    typedef typename SubiteratorT::reference		reference;
-	    typedef typename SubiteratorT::pointer			pointer;
+	    typedef typename SubcontainerT::iterator::value_type		value_type;
+	    typedef typename SubcontainerT::iterator::reference		reference;
+	    typedef typename SubcontainerT::iterator::pointer			pointer;
 	    typedef std::forward_iterator_tag 				iterator_category;
 
-		// nested iterator has explicit conversion from iterator to nested_iterator
-		nested_iterator(const iterator & bit)
+		// nested iterator has explicit conversion from outer_iterator to iterator
+		iterator(const outer_iterator & bit)
 		: cont(bit.cont)
 		, subit(bit.cont->mEndSubcont.begin())
 		, it(bit) {
-			if (it != cont->end())
+			if (it != cont->outer_end())
 			{
 				subit = getIteratorValue(*cont, it).begin();
 			}
@@ -243,16 +236,16 @@ public:
 
 
 		// copy construction
-		nested_iterator(const nested_iterator & bit)
+		iterator(const iterator & bit)
 		: cont(bit.cont)
 		, subit(bit.subit)
 		, it(bit.it) {};
 
 
 		// copy assignment
-		nested_iterator & operator=(const nested_iterator & bit)
+		iterator & operator=(const iterator & bit)
 		{
-			nested_iterator nit(bit);
+			iterator nit(bit);
 			// std::swap(nit, *this);
 			cont = nit.cont;
 			subit = nit.subit;
@@ -266,7 +259,7 @@ public:
 		// preincrement 
 		self_type operator++(){
 			subit++;
-			while (it != cont->end()){
+			while (it != cont->outer_end()){
 				if (subit != getIteratorValue(*cont, it).end()){
 					return *this;
 				}
@@ -274,7 +267,7 @@ public:
 				// reached end of subcontainer, iterate to next one
 				it++;
 
-				if (it == cont->end()) break;
+				if (it == cont->outer_end()) break;
 				subit = getIteratorValue(*cont, it).begin();	
 			}
 
@@ -287,7 +280,7 @@ public:
 		// postincrement 
 		self_type operator++(int blah){
 			subit++;
-			while (it != cont->end()){
+			while (it != cont->outer_end()){
 				if (subit != getIteratorValue(*cont, it).end()){
 					return *this;
 				}
@@ -295,12 +288,12 @@ public:
 				// reached end of subcontainer, iterate to next one
 				it++;
 
-				if (it == cont->end()) break;
+				if (it == cont->outer_end()) break;
 				subit = getIteratorValue(*cont, it).begin();	
 			}
 
 			// have reached the end of all the cells
-			it = cont->end();
+			it = cont->outer_end();
 			subit = cont->mEndSubcont.end();
 			return *this;
 		}
@@ -315,11 +308,23 @@ public:
 		bool operator==(const self_type & leaf) const {return subit == leaf.subit;};
 
 	private:
-		SubiteratorT 				subit;
-		iterator 					it;
-		NestedContainer * 			cont;
+		typename SubcontainerT::iterator 	subit;
+		outer_iterator 						it;
+		NestedContainer * 					cont;
 	};
 
+
+
+	iterator begin(){return outer_iterator(*this, ContainerT<KeyT, SubcontainerT>::begin());};
+	iterator end(){return outer_iterator(*this, ContainerT<KeyT, SubcontainerT>::end());};
+
+
+
+
+	// template <typename Arg1, typename... Args>
+	// iterator find(const KeyT & key, Arg1 arg1, Args... args){
+	// 	return ContainerT::find(key, arg1, args);
+	// }
 };
 
 

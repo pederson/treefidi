@@ -56,19 +56,19 @@ int main(int argc, char * argv[]){
 
 
 	int ct=0;
-	for (mapmap::iterator it=m.begin(); it!=m.end(); it++){
+	for (auto it=m.outer_begin(); it!=m.outer_end(); it++){
 		ct++;
 	}
 	std::cout << "level count: " << ct << std::endl;
 
 
-	typedef typename inner_map::iterator  				imit;
-	typedef typename mapmap::nested_iterator<imit> 		mnit;
-	typedef typename mapmapmap::nested_iterator<mnit> 	wholeiterator;
+	// typedef typename inner_map::iterator  				imit;
+	// typedef typename mapmap::nested_iterator<imit> 		mnit;
+	// typedef typename mapmapmap::nested_iterator<mnit> 	wholeiterator;
 	
 	
 	ct=0;
-	for (mnit it=m.begin(); it!=m.end(); it++){
+	for (auto it=m.begin(); it!=m.end(); it++){
 		std::cout << it->second << std::endl;
 		ct++;
 	}
@@ -78,7 +78,18 @@ int main(int argc, char * argv[]){
 
 
 	ct=0;
-	for (wholeiterator it=mm.begin(); it!=mm.end(); it++){
+	for (auto it=mm.begin(); it!=mm.end(); it++){
+		std::cout << it->second << std::endl;
+		ct++;
+	}
+	std::cout << "total count: " << ct << std::endl;
+
+
+
+
+
+	ct=0;
+	for (auto it=mm[3].begin(); it!=mm[3].end(); it++){
 		std::cout << it->second << std::endl;
 		ct++;
 	}
