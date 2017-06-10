@@ -35,10 +35,16 @@ int main(int argc, char * argv[]){
 	
 	m[1][0]=3;
 	m[1][1]=5;
-	m[2][0]=4;
-	m[3][0]=1;
-	m[3][1]=2;
+	m[2][2]=4;
+	m[3][3]=1;
+	m[3][4]=2;
 
+
+	auto it = m.find(4);
+	std::cout << "found key 4: " << it->first << " --> " << it->second << std::endl;
+
+	it = m.find(4, 3);
+	std::cout << "found key 4 with hint: " << it->first << " --> " << it->second << std::endl;
 
 
 	mm[1][0][0]=9;
@@ -61,11 +67,6 @@ int main(int argc, char * argv[]){
 	}
 	std::cout << "level count: " << ct << std::endl;
 
-
-	// typedef typename inner_map::iterator  				imit;
-	// typedef typename mapmap::nested_iterator<imit> 		mnit;
-	// typedef typename mapmapmap::nested_iterator<mnit> 	wholeiterator;
-	
 	
 	ct=0;
 	for (auto it=m.begin(); it!=m.end(); it++){

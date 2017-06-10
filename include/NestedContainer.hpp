@@ -329,14 +329,14 @@ public:
 	// do a find with the first argument specified
 	template <typename Arg1, typename... Args>
 	iterator find(const KeyT & key, Arg1 arg1, Args... args){
-		return this->operator[](arg1).find(key, args...);
+		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+		return iterator(*this, it, this->operator[](arg1).find(key, args...));
 	}
 
 	// do a find by searching through all the subcontainers
-	template <typename... Args>
-	iterator find(const KeyT & key, Args... args){
+	iterator find(const KeyT & key){
 		for (auto it=outer_begin(); it!=outer_end(); it++){
-			auto sit = this->operator[](it->first).find(key, args...);
+			auto sit = this->operator[](it->first).find(key);
 			if (sit != this->operator[](it->first).end()){
 				return iterator(*this, it, sit);
 			}
