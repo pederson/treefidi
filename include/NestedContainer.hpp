@@ -142,12 +142,12 @@ public:
 	// basic iterator over the outer container
 	class outer_iterator{
 	public:
-		typedef outer_iterator 							self_type;
-		typedef std::ptrdiff_t 							difference_type;
-	    typedef typename base_iterator::value_type		value_type;
-	    typedef typename base_iterator::reference		reference;
-	    typedef typename base_iterator::pointer			pointer;
-	    typedef std::forward_iterator_tag 				iterator_category;
+		typedef outer_iterator 								self_type;
+		typedef typename base_iterator::difference_type		difference_type;
+	    typedef typename base_iterator::value_type			value_type;
+	    typedef typename base_iterator::reference			reference;
+	    typedef typename base_iterator::pointer				pointer;
+	    typedef typename base_iterator::iterator_category 	iterator_category;
 
 
 	    friend class iterator;
@@ -213,12 +213,18 @@ public:
 
 	class iterator{
 	public:
-		typedef iterator 								self_type;
-		typedef std::ptrdiff_t 							difference_type;
+		typedef iterator 											self_type;
+		typedef typename SubcontainerT::iterator::difference_type 	difference_type;
 	    typedef typename SubcontainerT::iterator::value_type		value_type;
-	    typedef typename SubcontainerT::iterator::reference		reference;
+	    typedef typename SubcontainerT::iterator::reference			reference;
 	    typedef typename SubcontainerT::iterator::pointer			pointer;
-	    typedef std::forward_iterator_tag 				iterator_category;
+	    typedef typename SubcontainerT::iterator::iterator_category iterator_category;
+
+		// construction from a subiterator
+		iterator(NestedContainer & c, outer_iterator oit, typename SubcontainerT::iterator sit)
+		: cont(&c)
+		, subit(sit)
+		, it(oit) {};
 
 		// nested iterator has explicit conversion from outer_iterator to iterator
 		iterator(const outer_iterator & bit)
@@ -320,11 +326,23 @@ public:
 
 
 
+	// do a find with the first argument specified
+	template <typename Arg1, typename... Args>
+	iterator find(const KeyT & key, Arg1 arg1, Args... args){
+		return this->operator[](arg1).find(key, args...);
+	}
 
-	// template <typename Arg1, typename... Args>
-	// iterator find(const KeyT & key, Arg1 arg1, Args... args){
-	// 	return ContainerT::find(key, arg1, args);
-	// }
+	// do a find by searching through all the subcontainers
+	template <typename... Args>
+	iterator find(const KeyT & key, Args... args){
+		for (auto it=outer_begin(); it!=outer_end(); it++){
+			auto sit = this->operator[](it->first).find(key, args...);
+			if (sit != this->operator[](it->first).end()){
+				return iterator(*this, it, sit);
+			}
+		}
+		return end();
+	}
 };
 
 
