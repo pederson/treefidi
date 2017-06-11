@@ -124,7 +124,6 @@ public:
 	// class typedefs
 	typedef Key 													KeyT;
 	typedef Subcontainer 											SubcontainerT;
-	// typedef Container 												ContainerT;
 	typedef NestedContainer<KeyT, SubcontainerT, ContainerT>		SelfT;
 	typedef ContainerT<KeyT, SubcontainerT> 						base_container;
 	typedef typename ContainerT<KeyT, SubcontainerT>::iterator 		base_iterator;
@@ -201,8 +200,8 @@ public:
 	};
 
 
-	outer_iterator outer_begin(){return outer_iterator(*this, ContainerT<KeyT, SubcontainerT>::begin());};
-	outer_iterator outer_end(){return outer_iterator(*this, ContainerT<KeyT, SubcontainerT>::end());};
+	outer_iterator outer_begin(){return outer_iterator(*this, base_container::begin());};
+	outer_iterator outer_end(){return outer_iterator(*this, base_container::end());};
 
 
 	
@@ -320,9 +319,24 @@ public:
 	};
 
 
+	// // begin with the first argument specified
+	// template <typename Arg1, typename... Args>
+	// iterator begin(Arg1 arg1, Args... args){
+	// 	outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+	// 	return iterator(*this, it, this->operator[](arg1).begin(args...));
+	// }
 
-	iterator begin(){return outer_iterator(*this, ContainerT<KeyT, SubcontainerT>::begin());};
-	iterator end(){return outer_iterator(*this, ContainerT<KeyT, SubcontainerT>::end());};
+	// // end with the first argument specified
+	// template <typename Arg1, typename... Args>
+	// iterator end(Arg1 arg1, Args... args){
+	// 	outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+	// 	return iterator(*this, it, this->operator[](arg1).end(args...));
+	// }
+
+
+	iterator begin(){return outer_iterator(*this, base_container::begin());};
+	
+	iterator end(){return outer_iterator(*this, base_container::end());};
 
 
 
@@ -343,6 +357,15 @@ public:
 		}
 		return end();
 	}
+
+
+
+	// // do an insert with the first argument specified
+	// iterator insert(const_iterator pos, const typename base_container::value_type & value)
+	// {
+	// 	outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+	// 	return iterator(*this, it, this->operator[](arg1).find(key, args...));
+	// }
 };
 
 

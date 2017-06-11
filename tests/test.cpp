@@ -90,7 +90,7 @@ int main(int argc, char * argv[]){
 
 
 	ct=0;
-	for (auto it=mm[3].begin(); it!=mm[3].end(); it++){
+	for (auto it=mm.begin(3); it!=mm.end(3); it++){
 		std::cout << it->second << std::endl;
 		ct++;
 	}
