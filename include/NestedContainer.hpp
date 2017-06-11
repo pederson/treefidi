@@ -287,6 +287,7 @@ public:
 			subit++;
 			while (it != cont->outer_end()){
 				if (subit != getIteratorValue(*cont, it).end()){
+					// subit++;
 					return *this;
 				}
 
@@ -319,19 +320,21 @@ public:
 	};
 
 
-	// // begin with the first argument specified
-	// template <typename Arg1, typename... Args>
-	// iterator begin(Arg1 arg1, Args... args){
-	// 	outer_iterator it = outer_iterator(*this, base_container::find(arg1));
-	// 	return iterator(*this, it, this->operator[](arg1).begin(args...));
-	// }
+	// begin with the first argument specified
+	template <typename Arg1, typename... Args>
+	iterator begin(Arg1 arg1, Args... args){
+		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+		return iterator(*this, it, this->operator[](arg1).begin(args...));
+	}
 
-	// // end with the first argument specified
-	// template <typename Arg1, typename... Args>
-	// iterator end(Arg1 arg1, Args... args){
-	// 	outer_iterator it = outer_iterator(*this, base_container::find(arg1));
-	// 	return iterator(*this, it, this->operator[](arg1).end(args...));
-	// }
+	// end with the first argument specified
+	template <typename Arg1, typename... Args>
+	iterator end(Arg1 arg1, Args... args){
+		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+		it++;
+		if (it == outer_end()) return iterator(*this, it, mEndSubcont.end());
+		return iterator(*this, it, this->operator[](arg1).end(args...));
+	}
 
 
 	iterator begin(){return outer_iterator(*this, base_container::begin());};
