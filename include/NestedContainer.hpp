@@ -333,7 +333,8 @@ public:
 		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
 		it++;
 		if (it == outer_end()) return iterator(*this, it, mEndSubcont.end());
-		return iterator(*this, it, this->operator[](arg1).end(args...));
+		// return iterator(*this, it, this->operator[](arg1).end(args...));
+		return iterator(*this, it, getIteratorValue(*this, it).begin(args...));
 	}
 
 
