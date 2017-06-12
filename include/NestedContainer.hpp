@@ -127,7 +127,8 @@ public:
 	typedef NestedContainer<KeyT, SubcontainerT, ContainerT>		SelfT;
 	typedef ContainerT<KeyT, SubcontainerT> 						base_container;
 	typedef typename ContainerT<KeyT, SubcontainerT>::iterator 		base_iterator;
-	
+	typedef typename SubcontainerT::value_type						value_type;
+
 private:
 	SubcontainerT    mEndSubcont;
 
@@ -277,7 +278,7 @@ public:
 			}
 
 			// have reached the end of all the cells
-			it = cont->end();
+			it = cont->outer_end();
 			subit = cont->mEndSubcont.end();
 			return *this;
 		}
@@ -364,12 +365,14 @@ public:
 
 
 
-	// // do an insert with the first argument specified
-	// iterator insert(const_iterator pos, const typename base_container::value_type & value)
-	// {
-	// 	outer_iterator it = outer_iterator(*this, base_container::find(arg1));
-	// 	return iterator(*this, it, this->operator[](arg1).find(key, args...));
-	// }
+
+	template <typename Arg1, typename... Args>
+	std::pair<iterator, bool> insert(const value_type & val, Arg1 arg1, Args... args){
+		std::pair<typename SubcontainerT::iterator, bool> sitpair = this->operator[](arg1).insert(val, args...);
+		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+		return std::make_pair(iterator(*this, it, sitpair.first), sitpair.second);
+	}
+
 };
 
 
