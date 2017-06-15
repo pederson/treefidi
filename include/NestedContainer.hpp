@@ -55,8 +55,8 @@ struct tovoid {
 template <typename T, typename I, typename = void>
 struct value_type {
   typedef typename T::value_type type;
-  static typename std::add_lvalue_reference<type>::type get(I & t) {
-    return *t;
+  static typename std::add_rvalue_reference<type>::type get(I & t) {
+    return std::move(*t);
   };
 };
 
@@ -64,15 +64,15 @@ struct value_type {
 template <typename T, typename I>
 struct value_type<T, I, typename tovoid<typename T::mapped_type>::type> {
   typedef typename T::mapped_type type;
-  static typename std::add_lvalue_reference<type>::type get(I & t) {
-    return t->second;
+  static typename std::add_rvalue_reference<type>::type get(I & t) {
+    return std::move(t->second);
   };
 };
 
 
 template <typename Container, typename Iterator>
-inline typename std::add_lvalue_reference<typename value_type<Container, Iterator>::type>::type getIteratorValue(const Container & c, Iterator & it){
-	return value_type<Container, Iterator>::get(it);
+inline typename std::add_rvalue_reference<typename value_type<Container, Iterator>::type>::type getIteratorValue(const Container & c, Iterator & it){
+	return std::move(value_type<Container, Iterator>::get(it));
 };
 
 
@@ -134,7 +134,7 @@ private:
 
 public:
 
-	class iterator;
+	// class iterator;
 	friend class iterator;
 	
 
@@ -164,9 +164,8 @@ public:
 		// copy assignment
 		outer_iterator & operator=(const outer_iterator & itr){
 			outer_iterator i(itr);
-			// std::swap(i,*this);
-			cont = i.cont;
-			it = i.it;
+			std::swap(i.cont, cont);
+			std::swap(i.it, it);
 			return *this;
 		}
 
@@ -221,25 +220,10 @@ public:
 	    typedef typename SubcontainerT::iterator::iterator_category iterator_category;
 
 		// construction from a subiterator
-		iterator(NestedContainer & c, outer_iterator oit, typename SubcontainerT::iterator sit)
+		iterator(NestedContainer & c, const outer_iterator & oit, const typename SubcontainerT::iterator & sit)
 		: cont(&c)
 		, subit(sit)
 		, it(oit) {};
-
-		// nested iterator has explicit conversion from outer_iterator to iterator
-		iterator(const outer_iterator & bit)
-		: cont(bit.cont)
-		, subit(bit.cont->mEndSubcont.begin())
-		, it(bit) {
-			if (it != cont->outer_end())
-			{
-				subit = getIteratorValue(*cont, it).begin();
-			}
-			else{
-				subit = cont->mEndSubcont.end();
-			}
-		};
-
 
 		// copy construction
 		iterator(const iterator & bit)
@@ -252,23 +236,20 @@ public:
 		iterator & operator=(const iterator & bit)
 		{
 			iterator nit(bit);
-			// std::swap(nit, *this);
-			cont = nit.cont;
-			subit = nit.subit;
-			it = nit.it;
+			std::swap(nit.cont, cont);
+			std::swap(nit.subit, subit);
+			std::swap(nit.it, it);
 			return *this;
 		};
 
 		// dereferencing
-		reference operator*(){ return *subit;};
+		reference operator*(){ return subit.operator*();};
 
 		// preincrement 
 		self_type operator++(){
 			subit++;
 			while (it != cont->outer_end()){
-				if (subit != getIteratorValue(*cont, it).end()){
-					return *this;
-				}
+				if (subit != getIteratorValue(*cont,it).end()) return *this;
 
 				// reached end of subcontainer, iterate to next one
 				it++;
@@ -278,7 +259,6 @@ public:
 			}
 
 			// have reached the end of all the cells
-			it = cont->outer_end();
 			subit = cont->mEndSubcont.end();
 			return *this;
 		}
@@ -287,8 +267,7 @@ public:
 		self_type operator++(int blah){
 			subit++;
 			while (it != cont->outer_end()){
-				if (subit != getIteratorValue(*cont, it).end()){
-					// subit++;
+				if (subit != getIteratorValue(*cont,it).end()){
 					return *this;
 				}
 
@@ -296,17 +275,18 @@ public:
 				it++;
 
 				if (it == cont->outer_end()) break;
-				subit = getIteratorValue(*cont, it).begin();	
+				subit = getIteratorValue(*cont, it).begin();
 			}
 
 			// have reached the end of all the cells
-			it = cont->outer_end();
 			subit = cont->mEndSubcont.end();
 			return *this;
 		}
 
 		// pointer
-		pointer operator->() {return subit.operator->();};
+		pointer operator->() {
+			return subit.operator->();
+		};
 
 		// inequality
 		bool operator!=(const self_type & leaf) const {return subit != leaf.subit;};
@@ -334,14 +314,21 @@ public:
 		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
 		it++;
 		if (it == outer_end()) return iterator(*this, it, mEndSubcont.end());
-		// return iterator(*this, it, this->operator[](arg1).end(args...));
 		return iterator(*this, it, getIteratorValue(*this, it).begin(args...));
 	}
 
 
-	iterator begin(){return outer_iterator(*this, base_container::begin());};
+
+	iterator begin(){
+		base_iterator bit = base_container::begin();
+		outer_iterator it(*this, bit);
+		typename SubcontainerT::iterator sit = getIteratorValue(*this, it).begin();//it->second.begin();
+		return iterator(*this, it, sit);
+	};
 	
-	iterator end(){return outer_iterator(*this, base_container::end());};
+	iterator end(){
+		return iterator(*this, outer_end(), mEndSubcont.end());
+	};
 
 
 
