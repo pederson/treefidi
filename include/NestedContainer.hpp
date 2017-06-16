@@ -333,13 +333,17 @@ public:
 
 
 	// do a find with the first argument specified
+	// if not found, the result is end(arg1, args...)
 	template <typename Arg1, typename... Args>
 	iterator find(const KeyT & key, Arg1 arg1, Args... args){
 		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
-		return iterator(*this, it, this->operator[](arg1).find(key, args...));
+		typename SubcontainerT::iterator subit = this->operator[](arg1).find(key, args...);
+		if (subit == getIteratorValue(*this, it).end(args...)) return end(arg1, args...);
+		return iterator(*this, it, subit);
 	}
 
 	// do a find by searching through all the subcontainers
+	// if not found, the result is end() with no arguments
 	iterator find(const KeyT & key){
 		for (auto it=outer_begin(); it!=outer_end(); it++){
 			auto sit = this->operator[](it->first).find(key);
@@ -352,7 +356,7 @@ public:
 
 
 
-
+	// this MUST be a fully specified insert call... all args must be present, otherwise compilation error
 	template <typename Arg1, typename... Args>
 	std::pair<iterator, bool> insert(const value_type & val, Arg1 arg1, Args... args){
 		std::pair<typename SubcontainerT::iterator, bool> sitpair = this->operator[](arg1).insert(val, args...);
