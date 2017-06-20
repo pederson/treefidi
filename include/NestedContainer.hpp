@@ -128,6 +128,7 @@ public:
 	typedef ContainerT<KeyT, SubcontainerT> 						base_container;
 	typedef typename ContainerT<KeyT, SubcontainerT>::iterator 		base_iterator;
 	typedef typename SubcontainerT::value_type						value_type;
+	typedef typename SubcontainerT::key_type 						key_type;
 
 private:
 	SubcontainerT    mEndSubcont;
@@ -164,7 +165,8 @@ public:
 		// copy assignment
 		outer_iterator & operator=(const outer_iterator & itr){
 			outer_iterator i(itr);
-			std::swap(i.cont, cont);
+			// std::swap(i.cont, cont);
+			cont = i.cont;
 			std::swap(i.it, it);
 			return *this;
 		}
@@ -236,17 +238,27 @@ public:
 		iterator & operator=(const iterator & bit)
 		{
 			iterator nit(bit);
-			std::swap(nit.cont, cont);
+			// std::swap(nit.cont, cont);
+			cont = nit.cont;
 			std::swap(nit.subit, subit);
 			std::swap(nit.it, it);
 			return *this;
 		};
 
+		// destructor
+		~iterator(){};
+
+		// move constructor
+		iterator(iterator && bit) = default;
+
+		// move assigment
+		iterator & operator=(iterator && bit) = default;
+
 		// dereferencing
 		reference operator*(){ return subit.operator*();};
 
 		// preincrement 
-		self_type operator++(){
+		self_type & operator++(){
 			subit++;
 			while (it != cont->outer_end()){
 				if (subit != getIteratorValue(*cont,it).end()) return *this;
@@ -265,10 +277,11 @@ public:
 
 		// postincrement 
 		self_type operator++(int blah){
+			auto tmp(*this);
 			subit++;
 			while (it != cont->outer_end()){
 				if (subit != getIteratorValue(*cont,it).end()){
-					return *this;
+					return tmp;
 				}
 
 				// reached end of subcontainer, iterate to next one
@@ -280,7 +293,7 @@ public:
 
 			// have reached the end of all the cells
 			subit = cont->mEndSubcont.end();
-			return *this;
+			return tmp;
 		}
 
 		// pointer
@@ -298,23 +311,37 @@ public:
 		typename SubcontainerT::iterator 	subit;
 		outer_iterator 						it;
 		NestedContainer * 					cont;
+
+
+		void summarize(){
+			std::cout << "cont: " << cont << " outer_it: " << &it << " subit: " << &subit << std::endl;
+		}
 	};
 
 
 	// begin with the first argument specified
 	template <typename Arg1, typename... Args>
 	iterator begin(Arg1 arg1, Args... args){
+		typename SubcontainerT::iterator sit = this->operator[](arg1).begin(args...);
 		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
-		return iterator(*this, it, this->operator[](arg1).begin(args...));
+		
+		if (sit != getIteratorValue(*this, it).end(args...)) return iterator(*this, it, sit);
+		return end(arg1, args...);
 	}
 
 	// end with the first argument specified
 	template <typename Arg1, typename... Args>
 	iterator end(Arg1 arg1, Args... args){
 		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
-		it++;
-		if (it == outer_end()) return iterator(*this, it, mEndSubcont.end());
-		return iterator(*this, it, getIteratorValue(*this, it).begin(args...));
+		typename SubcontainerT::iterator sit = getIteratorValue(*this, it).end(args...);
+
+		if (sit == getIteratorValue(*this, it).end()){
+			it++;
+			if (it == outer_end()) return iterator(*this, it, mEndSubcont.end());
+			sit = getIteratorValue(*this, it).begin();
+		} 
+		
+		return iterator(*this, it, sit);
 	}
 
 
@@ -335,16 +362,23 @@ public:
 	// do a find with the first argument specified
 	// if not found, the result is end(arg1, args...)
 	template <typename Arg1, typename... Args>
-	iterator find(const KeyT & key, Arg1 arg1, Args... args){
-		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+	iterator find(const key_type & key, Arg1 arg1, Args... args){
+		// std::cout << "finding subit \n";
 		typename SubcontainerT::iterator subit = this->operator[](arg1).find(key, args...);
-		if (subit == getIteratorValue(*this, it).end(args...)) return end(arg1, args...);
-		return iterator(*this, it, subit);
+		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
+		
+		if (subit != getIteratorValue(*this, it).end(args...)){
+			// std::cout << "possible success of sub finder" << std::endl;
+			return iterator(*this, it, subit);
+		}
+		// std::cout << "reached end of sub finder" << std::endl;
+		return end(arg1, args...);
+		
 	}
 
 	// do a find by searching through all the subcontainers
 	// if not found, the result is end() with no arguments
-	iterator find(const KeyT & key){
+	iterator find(const key_type & key){
 		for (auto it=outer_begin(); it!=outer_end(); it++){
 			auto sit = this->operator[](it->first).find(key);
 			if (sit != this->operator[](it->first).end()){
