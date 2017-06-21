@@ -133,6 +133,7 @@ int main(int argc, char * argv[]){
 
 	// mm[Key1::four][Key2::three][32] = 1;
 
+	// test insertion
 	auto suc = mm.insert(std::make_pair(30, 1), Key1::four, Key2::two);
 	if (suc.second == false) std::cout << "insert was unsuccessful" << std::endl;
 	suc = mm.insert(std::make_pair(31, 2), Key1::four, Key2::two);
@@ -168,6 +169,10 @@ int main(int argc, char * argv[]){
 	// itmm = mm[Key1::three][Key2::one].find(35);
 	// if (itmm == mm[Key1::three][Key2::one].end()) std::cout << "didn't find key 35" << std::endl;
 
+
+	// test erasure
+	auto ite = mm.erase(mm.find(28));
+	std::cout << "erased key 28... new iterator points to :" << ite->first << " ---> " << ite->second << std::endl;
 
 
 	ct=0;

@@ -221,6 +221,9 @@ public:
 	    typedef typename SubcontainerT::iterator::pointer			pointer;
 	    typedef typename SubcontainerT::iterator::iterator_category iterator_category;
 
+
+	    friend class NestedContainer;
+
 		// construction from a subiterator
 		iterator(NestedContainer & c, const outer_iterator & oit, const typename SubcontainerT::iterator & sit)
 		: cont(&c)
@@ -396,6 +399,24 @@ public:
 		std::pair<typename SubcontainerT::iterator, bool> sitpair = this->operator[](arg1).insert(val, args...);
 		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
 		return std::make_pair(iterator(*this, it, sitpair.first), sitpair.second);
+	}
+
+
+
+	// this MUST be a fully specified erase call... all args must be present, otherwise compilation error
+	// erase by iterator
+	// template <typename Arg1, typename... Args>
+	iterator erase(iterator position){
+		auto it = position.it;
+		typename SubcontainerT::iterator sit = getIteratorValue(*this, it).erase(position.subit);
+		
+		if (sit == getIteratorValue(*this, it).end()){
+			it++;
+			if (it == outer_end()) return iterator(*this, it, mEndSubcont.end());
+			sit = getIteratorValue(*this, it).begin();
+		} 
+		
+		return iterator(*this, it, sit);
 	}
 
 };
