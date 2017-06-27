@@ -212,6 +212,25 @@ public:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	class iterator{
 	public:
 		typedef iterator 											self_type;
@@ -362,6 +381,17 @@ public:
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 	// do a find with the first argument specified
 	// if not found, the result is end(arg1, args...)
 	template <typename Arg1, typename... Args>
@@ -420,6 +450,32 @@ public:
 	}
 
 };
+
+
+
+
+
+
+
+
+
+
+
+
+template <class NContainer, class UnaryFunction>
+void nested_for_each(NContainer & c, std::vector<typename NContainer::KeyT> & keys, UnaryFunction f){
+	for (auto it = keys.begin(); it!=keys.end(); it++){
+		std::for_each(c[*it].begin(), c[*it].end(), f);
+	}
+}
+
+
+template <class NContainer, class UnaryFunction>
+void nested_for_each(NContainer & c, std::vector<typename NContainer::KeyT> & keys, std::map<typename NContainer::KeyT, UnaryFunction> & fmap){
+	for (auto it = keys.begin(); it!=keys.end(); it++){
+		std::for_each(c[*it].begin(), c[*it].end(), fmap.at(*it));
+	}
+}
 
 
 
