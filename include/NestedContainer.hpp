@@ -43,8 +43,6 @@ using DefVec = typename DefVecTypedef<V>::type;
 
 
 
-
-
 // use some SFINAE magic to get mapped containers value 
 template <typename T>
 struct tovoid {
@@ -54,7 +52,8 @@ struct tovoid {
 // if is a vector, list, deque, etc... where there is no key_type and mapped_type, just a value
 template <typename T, typename I, typename = void>
 struct value_type {
-  typedef typename T::value_type type;
+  typedef typename T::value_type 	type;
+
   static typename std::add_rvalue_reference<type>::type get(I & t) {
     return std::move(*t);
   };
@@ -63,7 +62,8 @@ struct value_type {
 // if is a map or unordered map.... has a mapped_type
 template <typename T, typename I>
 struct value_type<T, I, typename tovoid<typename T::mapped_type>::type> {
-  typedef typename T::mapped_type type;
+  typedef typename T::mapped_type 	type;
+
   static typename std::add_rvalue_reference<type>::type get(I & t) {
     return std::move(t->second);
   };
@@ -78,6 +78,58 @@ inline typename std::add_rvalue_reference<typename value_type<Container, Iterato
 
 
 
+template <typename T, typename = void>
+struct isNestedContainer{
+	static const bool value = false;
+};
+
+template <typename T>
+struct isNestedContainer<T, typename tovoid<typename T::SubcontainerT>::type>{
+	static const bool value = true;
+};
+
+
+
+
+// // some SFINAE to get the key from a container iterator
+// // if is a vector, list, deque, etc... where there is no key_type and mapped_type, just a value
+// template <typename T, typename I, typename = void>
+// struct key_type {
+//   typedef std::size_t	 			type;
+
+//   static type getKey(T & c, I & t) {
+//     return t - c.begin();
+//   };
+// };
+
+
+// // if is a NestedContainer.... has a KeyT
+// template <typename T, typename I>
+// struct key_type<T, I, typename tovoid<typename T::KeyT>::type> {
+//   typedef typename T::KeyT	 	type;
+
+//   static type getKey(T & c, I & t) {
+//     return t->first;
+//   };
+// };
+
+
+// // if is a map or unordered map.... has a mapped_type
+// template <typename T, typename I>
+// struct key_type<T, I, typename tovoid<typename T::mapped_type>::type> {
+//   typedef typename T::key_type	 	type;
+
+//   static type getKey(T & c, I & t) {
+//     return t->first;
+//   };
+// };
+
+
+
+// template <typename Container, typename Iterator>
+// inline typename key_type<Container, Iterator>::type getIteratorKey(const Container & c, Iterator & it){
+// 	return key_type<Container, Iterator>::getKey(c, it);
+// };
 
 
 
@@ -196,6 +248,10 @@ public:
 		bool operator==(const self_type & leaf) const {return it == leaf.it;};
 
 
+
+
+		base_iterator get_base() {return it;};
+		NestedContainer * get_cont() {return cont;};
 	private:
 		base_iterator 			it;
 		NestedContainer * 		cont;
@@ -329,6 +385,8 @@ public:
 		// equality
 		bool operator==(const self_type & leaf) const {return subit == leaf.subit;};
 
+		outer_iterator get_outer() {return it;};
+		NestedContainer * get_cont() {return cont;};
 	private:
 		typename SubcontainerT::iterator 	subit;
 		outer_iterator 						it;
@@ -379,6 +437,27 @@ public:
 		return iterator(*this, outer_end(), mEndSubcont.end());
 	};
 
+
+
+
+
+	// get a tuple of keys for a given iterator. this overload is for
+	// a SubcontainerT that is NOT another NestedContainer
+	template <typename Iter, typename std::enable_if<!isNestedContainer<SubcontainerT>::value && 
+							  std::is_same<Iter, iterator>::value, void>::type * dummy = nullptr>
+	auto key_tuple(Iter it){
+		return std::make_tuple(it.it->first, it->first);
+	}
+
+	// get a tuple of keys for a given iterator. this overload is for
+	// a SubcontainerT that is another NestedContainer
+	template <typename Iter, typename std::enable_if<isNestedContainer<SubcontainerT>::value && 
+							std::is_same<Iter, iterator>::value, void>::type * dummy = nullptr>
+	auto key_tuple(Iter it){
+		SubcontainerT & subc = this->operator[](it.it->first);
+		auto subt = subc.key_tuple(it.subit);
+		return std::tuple_cat(std::make_tuple(it.it->first), subt);
+	}
 
 
 
