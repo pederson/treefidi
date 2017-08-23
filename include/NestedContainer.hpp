@@ -71,7 +71,8 @@ struct value_type<T, I, typename tovoid<typename T::mapped_type>::type> {
 
 
 template <typename Container, typename Iterator>
-inline typename std::add_rvalue_reference<typename value_type<Container, Iterator>::type>::type getIteratorValue(const Container & c, Iterator & it){
+inline typename std::add_rvalue_reference<typename value_type<Container, Iterator>::type>::type 
+getIteratorValue(const Container & c, Iterator & it){
 	return std::move(value_type<Container, Iterator>::get(it));
 };
 
@@ -412,14 +413,20 @@ public:
 	// end with the first argument specified
 	template <typename Arg1, typename... Args>
 	iterator end(Arg1 arg1, Args... args){
+		// std::cout << "Calling END..." << std::endl;
 		outer_iterator it = outer_iterator(*this, base_container::find(arg1));
 		typename SubcontainerT::iterator sit = getIteratorValue(*this, it).end(args...);
 
-		if (sit == getIteratorValue(*this, it).end()){
+		// std::cout << "outer key: " << static_cast<double>(it->first) << std::endl;
+
+		while (sit == getIteratorValue(*this, it).end()){
 			it++;
-			if (it == outer_end()) return iterator(*this, it, mEndSubcont.end());
+			if (it == outer_end()){
+				sit = mEndSubcont.end();
+				break;
+			}
 			sit = getIteratorValue(*this, it).begin();
-		} 
+		}
 		
 		return iterator(*this, it, sit);
 	}
