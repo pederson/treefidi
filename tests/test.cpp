@@ -200,5 +200,47 @@ int main(int argc, char * argv[]){
 	}
 	std::cout << "total count: " << ct << std::endl;
 
+
+
+
+/////////////////////////////////////////////////////////
+// test the MultiSetMap
+	std::cout << "***** testing multiset_map" << std::endl;
+	treefidi::MultiSetMap<int, bool, std::string> 	msmap;
+	msmap[0] = true;
+	msmap[1] = false;
+	msmap[2] = true;
+	msmap[3] = false;
+	msmap[4] = true;
+	msmap[5] = false;
+	msmap[6] = true;
+	for (auto it=msmap.begin(); it!=msmap.end(); it++){
+		if (it->first <= 4) msmap.add_to_set(it, "below_5");
+		if (it->first >= 2) msmap.add_to_set(it, "above_1");
+		if (it->first == 6) msmap.add_to_set(it, "equal_6");
+	}
+	for (auto s=msmap.set_enumerator_begin(); s!=msmap.set_enumerator_end(); s++){
+		// std::cout << *it << std::end;
+		std::cout << "iterating over " << *s << "..." << std::endl;
+		for (auto it=msmap.begin(*s); it!=msmap.end(*s); it++){
+			std::cout << "key:  " << it->first << " value: " << it->second << std::endl;
+		}
+	}
+	std::cout << "erasing equal_6..." << std::endl;
+	auto sixit = msmap.find(6);
+	msmap[3] = true;
+	msmap.remove_from_set(sixit, "equal_6");
+	for (auto s=msmap.set_enumerator_begin(); s!=msmap.set_enumerator_end(); s++){
+		// std::cout << *it << std::end;
+		std::cout << "iterating over " << *s << "..." << std::endl;
+		for (auto it=msmap.begin(*s); it!=msmap.end(*s); it++){
+			std::cout << "key:  " << it->first << " value: " << it->second << std::endl;
+		}
+	}
+
+
+
+
+
 	return 0;
 }

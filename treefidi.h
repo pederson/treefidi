@@ -4,6 +4,7 @@
 #include "include/NestedContainer.hpp"
 #include "include/MultilevelContainer.hpp"
 #include "include/DomainContainer.hpp"
+#include "include/MultiSetMap.hpp"
 
 
 #endif
