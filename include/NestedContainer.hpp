@@ -78,12 +78,14 @@ getIteratorValue(const Container & c, Iterator & it){
 
 
 
-
+// this detects containers that are NOT nested containers
 template <typename T, typename = void>
 struct isNestedContainer{
 	static const bool value = false;
 };
 
+// this detects containers that ARE nested containers by
+// seeing if they have a "SubcontainerT" typedef
 template <typename T>
 struct isNestedContainer<T, typename tovoid<typename T::SubcontainerT>::type>{
 	static const bool value = true;
@@ -147,15 +149,17 @@ struct isNestedContainer<T, typename tovoid<typename T::SubcontainerT>::type>{
 
 
 // NestedContainer is a container that contains another container.
-//* You could possible contain another nested container... container-ception
+//* 	You could possible contain another nested container... container-ception
 //*
-//* Of course you can also make containers containing containers in the
-//* usual stl container types. What makes this container different is that
-//* it implements not just ::iterator, but also ::nested_iterator, which
-//* allows you to iterate over all subcontainer elements in each subcontainer
-//* with a single iterator. For example, you might have a map<int, map<int, double>>. 
-//* You could iterate over all the doubles by using 
-//* a ::nested_iterator<map<int,double>::iterator>
+//* 	Of course you can also make containers containing containers in the
+//* 	usual stl container types. What makes this container different?
+//* 	It implements not just ::outer_iterator (which iterates over they <Key, Subcontainer>
+//* 	pairs, but it also implements ::iterator, which
+//* 	allows you to iterate over all subcontainer elements in each subcontainer
+//* 	with a single iterator. For example, you might have a map<int, map<int, double>>. 
+//* 	You could iterate over all the doubles by using 
+//* 	an ::iterator. The ::iterator type is called using begin(Args...)/end(Args...), while
+//*		the ::outer_iterator is called using outer_begin()/outer_end()
 //*
 //***********************************************************/
 

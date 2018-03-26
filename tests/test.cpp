@@ -222,7 +222,7 @@ int main(int argc, char * argv[]){
 	for (auto s=msmap.set_enumerator_begin(); s!=msmap.set_enumerator_end(); s++){
 		// std::cout << *it << std::end;
 		std::cout << "iterating over " << *s << "..." << std::endl;
-		for (auto it=msmap.begin(*s); it!=msmap.end(*s); it++){
+		for (auto it=msmap.set_begin(*s); it!=msmap.set_end(*s); it++){
 			std::cout << "key:  " << it->first << " value: " << it->second << std::endl;
 		}
 	}
@@ -233,14 +233,62 @@ int main(int argc, char * argv[]){
 	for (auto s=msmap.set_enumerator_begin(); s!=msmap.set_enumerator_end(); s++){
 		// std::cout << *it << std::end;
 		std::cout << "iterating over " << *s << "..." << std::endl;
-		for (auto it=msmap.begin(*s); it!=msmap.end(*s); it++){
+		for (auto it=msmap.set_begin(*s); it!=msmap.set_end(*s); it++){
 			std::cout << "key:  " << it->first << " value: " << it->second << std::endl;
 		}
 	}
 
 
 
+/////////////////////////////////////////////////////////
+// test the MultiSetMap inside a NestedContainer
+	std::cout << "***** testing multiset_map" << std::endl;
+	treefidi::NestedContainer<int, treefidi::MultiSetMap<int, bool, std::string>> 	nestedmsm;
+	nestedmsm[0][0] = true;
+	nestedmsm[0][1] = false;
+	nestedmsm[0][2] = true;
+	nestedmsm[0][3] = false;
+	nestedmsm[0][4] = true;
+	nestedmsm[0][5] = false;
+	nestedmsm[0][6] = true;
 
+	nestedmsm[1][0] = !true;
+	nestedmsm[1][1] = !false;
+	nestedmsm[1][2] = !true;
+	nestedmsm[1][3] = !false;
+	nestedmsm[1][4] = !true;
+	nestedmsm[1][5] = !false;
+	nestedmsm[1][6] = !true;
+
+	for (auto l=0; l<=1; l++){
+		for (auto it=nestedmsm[l].begin(); it!=nestedmsm[l].end(); it++){
+			if (it->first <= 4) nestedmsm[l].add_to_set(it, "below_5");
+			if (it->first >= 2) nestedmsm[l].add_to_set(it, "above_1");
+			if (it->first == 6) nestedmsm[l].add_to_set(it, "equal_6");
+		}
+	}
+
+
+	for (auto l=0; l<=1; l++){
+		std::cout << "LEVEL: " << l << std::endl;
+		for (auto s=nestedmsm[l].set_enumerator_begin(); s!=nestedmsm[l].set_enumerator_end(); s++){
+			// std::cout << *it << std::end;
+			std::cout << "iterating over " << *s << "..." << std::endl;
+			for (auto it=nestedmsm[l].set_begin(*s); it!=nestedmsm[l].set_end(*s); it++){
+				std::cout << "key:  " << it->first << " value: " << it->second << std::endl;
+			}
+		}
+	}
+
+
+	// for (auto l=0; l<=1; l++){
+	// 	std::cout << "LEVEL: " << l << std::endl;
+	// 		// std::cout << *it << std::end;
+	// 		// std::cout << "iterating over " << *s << "..." << std::endl;
+	// 		for (auto it=nestedmsm.boundary_begin(l); it!=nestedmsm.boundary_end(l); it++){
+	// 			std::cout << "boundary: " << "key:  " << it->first << " value: " << it->second << std::endl;
+	// 		}
+	// }
 
 	return 0;
 }

@@ -12,7 +12,7 @@
 namespace treefidi{
 
 
-// typedef std::map as defaultmap;
+// typedef std::unordered_map as defaultmap;
 template <class K, class V>
 struct DefUMapTypedef{
 	typedef std::unordered_map<K, V> type;
@@ -28,18 +28,18 @@ using DefUMap = typename DefUMapTypedef<K,V>::type;
 
 
 // MultiSetMap is a mapped container type that organizes its elements into sets.
-//* Each key-value pair could possibly be in multiple sets (i.e. the intersection
-//* of two sets can be nonzero). 
+//* 	Each key-value pair could possibly be in multiple sets (i.e. the intersection
+//* 	of two sets can be nonzero). 
 //*
-//* Ordinary iteration over all elements is available with the ::iterator type and
-//* can be accessed using the begin() and end() functions. 
+//* 	Ordinary iteration over all elements is available with the ::iterator type and
+//* 	can be accessed using the begin() and end() functions. 
 //* 
-//* The unique aspect of this container is its ability to iterate over sets. 
-//* Iteration over sets is available with the ::set_iterator type, and can be 
-//* conveniently accessed using the begin(SetType s) and end(SetType s) functions
+//* 	The unique aspect of this container is its ability to iterate over sets. 
+//* 	Iteration over sets is available with the ::set_iterator type, and can be 
+//* 	conveniently accessed using the set_begin(SetType s) and set_end(SetType s) functions
 //*
-//* Furthermore, iteration through the available SetType values can be done
-//* via the ::set_enumerator type
+//* 	Furthermore, iteration through the available SetType values can be done
+//* 	via the ::set_enumerator type
 //*
 //***********************************************************/
 template <class Key, 
@@ -53,13 +53,16 @@ public:
 	typedef Value 													ValueT;
 	typedef Set 													SetT;
 	typedef MultiSetMap<KeyT, ValueT, SetT, ContainerT>				SelfT;
-
 	typedef ContainerT<KeyT, ValueT> 								base_container;
-	typedef typename ContainerT<KeyT, ValueT>::iterator 			iterator;
+	
 
-	typedef std::unordered_multimap<KeyT, SetT> 					MultimapT;		// this manages the subdomains
-	typedef std::unordered_map<KeyT, std::reference_wrapper<ValueT>>						SetContainerT;	// this is the set container
-	typedef std::unordered_map<SetT, SetContainerT>					SetmapT;		// this is the map to set containers
+	typedef std::unordered_multimap<KeyT, SetT> 						MultimapT;		// this manages the subdomains
+	typedef std::unordered_map<KeyT, std::reference_wrapper<ValueT>>	SetContainerT;	// this is the set container
+	typedef std::map<SetT, SetContainerT>								SetmapT;		// this is the map to set containers
+
+	typedef typename ContainerT<KeyT, ValueT>::iterator 			iterator;
+	typedef typename ContainerT<KeyT, ValueT>::value_type			value_type;
+	typedef typename ContainerT<KeyT, ValueT>::key_type 			key_type;
 
 protected:
 	// member data
@@ -158,14 +161,14 @@ public:
 
 
 
-	// classic iterator over the base container
-	iterator begin(){
-		return base_container::begin();
-	}
+	// // classic iterator over the base container
+	// iterator begin(){
+	// 	return base_container::begin();
+	// }
 
-	iterator end(){
-		return base_container::end();
-	}
+	// iterator end(){
+	// 	return base_container::end();
+	// }
 
 
 	// iterator over a single set
@@ -246,19 +249,34 @@ public:
 		SetT 									st;
 	};
 
-	set_iterator begin(SetT s){
+	set_iterator set_begin(SetT s){
 		return set_iterator(*this, mSetMap[s].begin(), s);
 	}
 
-	set_iterator end(SetT s){
+	set_iterator set_end(SetT s){
 		return set_iterator(*this, mSetMap[s].end(), s);
 	}
 
-	// operator[] with KeyT as argument
-	ValueT & operator[](KeyT key) {return base_container::operator[](key);};
 
-	// operator[] with SetT as argument
-	SetContainerT & operator[](SetT s){return mSetMap[s];};
+
+
+	// get all sets associated with a key
+	std::vector<SetT> key_sets(KeyT key){
+		std::vector<SetT> out;
+		auto range = mMultiMap.equal_range(key);
+		for (auto it=range.first; it!=range.second; it++) out.push_back(it->second);
+			return out;
+	}
+
+
+
+
+
+	// // operator[] with KeyT as argument
+	// ValueT & operator[](KeyT key) {return base_container::operator[](key);};
+
+	// // operator[] with SetT as argument
+	// SetContainerT & operator[](SetT s){return mSetMap[s];};
 
 	// find with no set specified
 	iterator find(KeyT key) {return base_container::find(key);};
@@ -287,7 +305,7 @@ public:
 template <class NContainer, class SetT, class UnaryFunction>
 void for_each_set(NContainer & c, std::vector<SetT> & sets, UnaryFunction f){
 	for (auto it = sets.begin(); it!=sets.end(); it++){
-		std::for_each(c[*it].begin(), c[*it].end(), f);
+		std::for_each(c.set_begin(*it), c.set_end(*it), f);
 	}
 }
 
@@ -295,7 +313,7 @@ void for_each_set(NContainer & c, std::vector<SetT> & sets, UnaryFunction f){
 template <class NContainer, class SetT, class UnaryFunction>
 void for_each_set(NContainer & c, std::vector<SetT> & sets, std::map<SetT, UnaryFunction> & fmap){
 	for (auto it = sets.begin(); it!=sets.end(); it++){
-		std::for_each(c[*it].begin(), c[*it].end(), fmap.at(*it));
+		std::for_each(c.set_begin(*it), c.set_end(*it), fmap.at(*it));
 	}
 }
 
