@@ -22,6 +22,24 @@ using DefUMap = typename DefUMapTypedef<K,V>::type;
 
 
 
+template <typename T>
+class reference_wrapper_plus : public std::reference_wrapper<T> {
+public:
+	typedef 	std::reference_wrapper<T> 		base;
+
+	reference_wrapper_plus(const std::reference_wrapper<T> & r)
+	: base(r) {};
+
+	// This is not overloadable, but it would be ideal
+	// T & operator.(){return base::get();};
+
+	T * operator&(){return &base::get();};
+
+};
+
+
+template <typename T>
+reference_wrapper_plus<T> ref(T & t){return std::ref(t);};
 
 
 
@@ -57,7 +75,7 @@ public:
 	
 
 	typedef std::unordered_multimap<KeyT, SetT> 						MultimapT;		// this manages the subdomains
-	typedef std::unordered_map<KeyT, std::reference_wrapper<ValueT>>	SetContainerT;	// this is the set container
+	typedef std::unordered_map<KeyT, reference_wrapper_plus<ValueT>>	SetContainerT;	// this is the set container
 	typedef std::map<SetT, SetContainerT>								SetmapT;		// this is the map to set containers
 
 	typedef typename ContainerT<KeyT, ValueT>::iterator 			iterator;
@@ -75,7 +93,7 @@ public:
 	// add an existing element to a set "s"
 	void add_to_set(iterator & it, SetT s){
 		mMultiMap.emplace(it->first, s);		// create entry in the multimap
-		mSetMap[s].insert(std::make_pair(it->first, std::ref(it->second)));	// create entry in the set container
+		mSetMap[s].insert(std::make_pair(it->first, treefidi::ref(it->second)));	// create entry in the set container
 	}
 
 	// remove an existing element from set "s"
@@ -161,14 +179,14 @@ public:
 
 
 
-	// // classic iterator over the base container
-	// iterator begin(){
-	// 	return base_container::begin();
-	// }
+	// classic iterator over the base container
+	iterator begin(){
+		return base_container::begin();
+	}
 
-	// iterator end(){
-	// 	return base_container::end();
-	// }
+	iterator end(){
+		return base_container::end();
+	}
 
 
 	// iterator over a single set
@@ -247,6 +265,9 @@ public:
 		typename SetContainerT::iterator 		it;
 		MultiSetMap * 							cont;
 		SetT 									st;
+
+		Value * 								val;
+
 	};
 
 	set_iterator set_begin(SetT s){
@@ -254,6 +275,14 @@ public:
 	}
 
 	set_iterator set_end(SetT s){
+		return set_iterator(*this, mSetMap[s].end(), s);
+	}
+
+	set_iterator begin(SetT s){
+		return set_iterator(*this, mSetMap[s].begin(), s);
+	}
+
+	set_iterator end(SetT s){
 		return set_iterator(*this, mSetMap[s].end(), s);
 	}
 

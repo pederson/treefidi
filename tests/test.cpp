@@ -280,6 +280,9 @@ int main(int argc, char * argv[]){
 		}
 	}
 
+	// auto a = treefidi::ref(sixit);
+	// std::cout << "msmap[5] = " << &a->
+
 
 	// for (auto l=0; l<=1; l++){
 	// 	std::cout << "LEVEL: " << l << std::endl;
